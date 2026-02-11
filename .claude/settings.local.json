@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:openmbee.atlassian.net)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.openmbee.org)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:flexo-mms-deployment-guide.readthedocs.io)",
+      "WebFetch(domain:www.omgwiki.org)",
+      "Bash(ls:*)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:www.omg.org)",
+      "WebFetch(domain:adept.univ-brest.fr)",
+      "Bash(gh auth status:*)",
+      "Bash(sudo chown:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: vault notes and conflict resolution problem statement\n\nBackground notes on Flexo MMS conflict resolution — model semantics,\ndiff/delta mechanics, merge gaps, conflict taxonomy, predicate compliance\noracle, policy framework, and governance concepts. Includes §1 Narrative\nFraming of the formal problem statement.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}
