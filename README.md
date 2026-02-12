@@ -16,6 +16,7 @@ This repository is an [Obsidian](https://obsidian.md/) vault. To read the conten
    ```
 2. Open Obsidian and select **Open folder as vault**
 3. Navigate to the cloned directory
+4. When prompted, **enable community plugins** — the vault includes the [Diagram Popup](https://github.com/ChenPengyuan/obsidian-mermaid-popup) plugin, which lets you click any Mermaid diagram to open it in a draggable, zoomable popup
 
 ## Where to Start
 
