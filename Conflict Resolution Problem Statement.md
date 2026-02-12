@@ -246,7 +246,6 @@ The formulation rests on four essential assumptions:
 
 4. **Conservative conflict detection.** If *either* application order violates constraints, the policy enters analysis mode. If one order is the valid and the other is invalid then the valid ordering is the default synthesis.
 
----
 
 ## 3 Notation
 
@@ -278,11 +277,92 @@ The notation draws on a generalized dynamical systems framework — state spaces
 | $\mathcal{A}(X)$ | Admissible action set (commits producing valid states from $X$) |
 | $\mathcal{V}$ | Valid state set $\{X \in \mathcal{X} \mid C_{\text{active}}(X) \leq \mathbf{0}\}$ |
 
-## 4 Constrained Optimization and Lagrange Duality
-
-*Collaborative: assistant drafts the standard optimization/duality framing; user validates the mapping from dual variables to predicate compliance scores and shadow prices.*
 
 ---
+
+## 4 Constrained Optimization and Lagrange Duality
+
+§2 stated the optimization problem and introduced the Lagrangian and shadow prices. This section develops the interpretation: what the duality tells you in practice, how the abstract constraint functions connect to concrete evaluation mechanisms, and what happens when things go wrong.
+
+### Domain Constraints and Optimization Constraints
+
+The constraints in §2 were defined uniformly as $c_i : \mathcal{X} \to \mathbb{R}$ with $c_i(X) \leq 0$ meaning satisfied. In practice, constraints play two distinct roles, and the distinction determines which constraints carry shadow prices.
+
+**Domain constraints** are hard pass/fail predicates — schema conformance, referential integrity, type correctness. A state that fails a domain constraint is not a valid model state at all: it is a malformed graph, a dangling reference, a type error. Domain constraints define the space $\mathcal{X}$ of well-formed model states and the space $\mathcal{U}$ of well-formed commits. They do not participate in the optimization as inequality constraints with multipliers — they define the space within which the optimization operates.
+
+**Optimization constraints** are continuous-valued: parametric bounds, budget allocations, behavioral metrics. They admit degrees of violation — a mass budget can be exceeded by a little or a lot — and their constraint functions $c_i(X)$ return real-valued magnitudes. These are the constraints that enter the Lagrangian and carry meaningful shadow prices.
+
+| Constraint role | Nature | Example | In the formalism |
+| --------------- | ------ | ------- | ---------------- |
+| **Domain** | Pass/fail; defines well-formedness | Referential integrity, schema conformance, type correctness | Constrains $\mathcal{X}$ and $\mathcal{U}$ (no multiplier) |
+| **Optimization** | Continuous-valued; admits degrees of violation | Mass budget, thermal capacity, behavioral metric | $c_i(X) \leq 0$ with shadow price $\mu^*_i$ |
+
+The reason for this split is mathematical. A shadow price $\mu^*_i$ measures *sensitivity* — the rate at which the resolution objective changes per unit of constraint relaxation. This requires the constraint function to be continuous: you need a meaningful notion of "slightly more" or "slightly less" violated. Binary pass/fail constraints have no such rate. They are either satisfied (the state is in the domain) or violated (the state is outside it entirely). There is no gradient to compute.
+
+### Connecting to the Predicate Compliance Oracle
+
+The [[Predicate Compliance Oracle]] implements constraint evaluation. Different predicate types map to different evaluation mechanisms and to different roles in the formalism:
+
+| Predicate type | Evaluation mechanism | Role |
+| -------------- | -------------------- | ---- |
+| Schema conformance | [[SPARQL\|SHACL]] validation | Domain |
+| Referential integrity | SPARQL ASK query | Domain |
+| Parametric constraint | Computation engine / external solver | Optimization (continuous) |
+| Behavioral correctness | Simulation pipeline / expert judgment | Optimization (continuous or judgment-estimated) |
+| Requirement satisfaction | Human review | Optimization (judgment-estimated) |
+
+Domain constraints are [[Verification and Validation|verification]]-scope: deterministic, automatable, and binary. Optimization constraints span both verification (parametric bounds computed mechanically) and validation (behavioral properties evaluated by simulation or human judgment). The oracle abstracts over this heterogeneity — it dispatches each predicate to the appropriate evaluation mechanism and returns a score that the formalism can use.
+
+### Complementary Slackness
+
+At the optimum, a fundamental relationship holds between each constraint and its shadow price:
+
+$$\mu^*_i \cdot c_i(X^+) = 0 \quad \text{for each optimization constraint } c_i$$
+
+This says: either the constraint is **slack** ($c_i(X^+) < 0$, satisfied with margin) and its multiplier is zero ($\mu^*_i = 0$, it did not influence the resolution), or the constraint is **binding** ($c_i(X^+) = 0$, tight) and its multiplier may be positive ($\mu^*_i > 0$, it actively shaped the outcome). Both cannot be nonzero simultaneously.
+
+The consequence is **sparsity**. For any given merge, most constraints are slack — the resolution satisfies them with room to spare, and their shadow prices are zero. Only the binding constraints have nonzero $\mu^*_i$, and these are the constraints that *matter for this particular merge*. The shadow price vector $\mu^*$ is a sparse, targeted summary of which constraints shaped the resolution.
+
+### Sensitivity and the Dual as Diagnostic
+
+The shadow price $\mu^*_i$ has a precise sensitivity interpretation:
+
+$$\mu^*_i = \frac{\partial L^*_{\text{intent}}}{\partial b_i}$$
+
+where $b_i$ represents the right-hand side of constraint $c_i(X) \leq b_i$ (in §2 we set $b_i = 0$, but the sensitivity is defined with respect to perturbations). In words: *relaxing constraint $c_i$ by one unit improves the resolution objective by $\mu^*_i$*.
+
+This is actionable information. A high shadow price on a coupling constraint might mean:
+
+- The constraint is too tight for the current design — the engineers should revisit the constraint, not the merge
+- Two teams are working at cross purposes — the conflict is not a merge artifact but a design disagreement that the merge has surfaced
+- The constraint is correct but the resolution required significant compromise — the reviewer should inspect what was sacrificed
+
+Combined with the requirement prices from §2 — $\nu_j = \sum_{c_i \in \mathcal{C}(r_j)} \mu^*_i$ — the sensitivity analysis traces from individual constraints to stakeholder requirements. An engineer reviewing a merge can see not just *that* a conflict was resolved, but *which requirements bore the cost*.
+
+### Infeasibility
+
+Assumption 3 (§2) states that a feasible resolution exists. When it fails — when no commit $w$ produces a state satisfying all active constraints — the primal problem is infeasible.
+
+Infeasibility is not a failure of the formalism. It is information: the two commits *cannot coexist* under the current constraints, and the dual provides structured evidence for why. The dual problem, when the primal is infeasible, identifies a minimal set of constraints that cannot be simultaneously satisfied — an **infeasibility certificate**.
+
+The policy response is **escalation**. The system reports:
+
+- $\mathcal{C}_{\text{conflict}}$ — the conflicting constraints
+- $\mathcal{R}_{\text{impacted}}$ — the impacted requirements
+- The infeasibility certificate — which constraint subset is mutually unsatisfiable
+- $\lambda_{uv}$ and $\lambda_{vu}$ — the violation vectors from both application orderings
+
+A human then decides: relax a constraint (change the policy), reject one commit (preserve the other), or restructure the model (resolve the underlying design conflict). The formalism ensures this decision is made with full information about *why* no automated resolution exists.
+
+### The Explainability Payoff
+
+The duality machinery serves a single purpose: **auditability**. Every merge resolution produced by the formalism comes with a complete explanation:
+
+- For each deviation of $w^*$ from $u \oplus v$: the binding constraint ($\mu^*_i > 0$) that forced the deviation, and the requirement ($c_i \vdash r_j$) it traces to
+- For feasible resolutions: the shadow prices rank constraints by their influence on the outcome
+- For infeasible cases: the certificate names the constraints that cannot be simultaneously satisfied
+
+This is the connection to governance. Organizational [[Policy|policy]] sets which constraints are domain (hard, defining well-formedness) and which are optimization (continuous, admitting tradeoffs). The dual variables report the cost of those choices for each specific merge. If a policy decision — say, classifying a behavioral constraint as required rather than advisory — consistently produces high shadow prices or infeasibility, that is evidence the policy should be revisited. The formalism makes the consequences of policy choices visible and quantifiable.
 
 ## 5 Family of Conflict Resolution Policies
 
