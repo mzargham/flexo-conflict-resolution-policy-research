@@ -6,6 +6,8 @@ Models in Flexo are not limited to enterprise model development platforms — it
 
 ## Engineering Operations Levels
 
+Flexo's governance and workflow responsibilities are organized into four operational levels, each with a distinct scope and set of concerns. The levels describe *who* interacts with the system and what decisions they make.
+
 | Level            | Concern                                                              | Note                                   |
 | ---------------- | -------------------------------------------------------------------- | -------------------------------------- |
 | 1 — Ecosystem    | Organizations sharing model assets across enterprise boundaries      | [[Flexo Ecosystem Level]]              |
