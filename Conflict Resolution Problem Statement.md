@@ -277,7 +277,6 @@ The notation draws on a generalized dynamical systems framework — state spaces
 | $\mathcal{A}(X)$ | Admissible action set (commits producing valid states from $X$) |
 | $\mathcal{V}$ | Valid state set $\{X \in \mathcal{X} \mid C_{\text{active}}(X) \leq \mathbf{0}\}$ |
 
-
 ---
 
 ## 4 Constrained Optimization and Lagrange Duality
@@ -364,15 +363,136 @@ The duality machinery serves a single purpose: **auditability**. Every merge res
 
 This is the connection to governance. Organizational [[Policy|policy]] sets which constraints are domain (hard, defining well-formedness) and which are optimization (continuous, admitting tradeoffs). The dual variables report the cost of those choices for each specific merge. If a policy decision — say, classifying a behavioral constraint as required rather than advisory — consistently produces high shadow prices or infeasibility, that is evidence the policy should be revisited. The formalism makes the consequences of policy choices visible and quantifiable.
 
+---
+
 ## 5 Family of Conflict Resolution Policies
 
-*Collaborative: assistant drafts the policy family structure (admissible actions × valid states); user validates consistency with the GDS framework and the optimal control formulation.*
+### Policies as Human-Machine Protocols
+
+A resolution policy is not a fully automated algorithm. It is a **protocol** that allocates steps between machine computation and human judgment, with the machine augmenting human decision-making to discover a maximally intent-preserving feasible commit.
+
+The machine's role is to evaluate domain constraints, compute constraint violation vectors, solve or approximate the optimization, identify $\mathcal{C}_{\text{conflict}}$ and $\mathcal{R}_{\text{impacted}}$, compute shadow prices, and present structured conflict reports. It operates within the verification scope — the domain of computable predicates.
+
+The human's role is to evaluate validation-scope constraints (behavioral properties, requirement satisfaction), exercise judgment on flagged conflicts, choose between candidate resolutions that the machine cannot rank, and decide how to proceed when the problem is infeasible. Humans serve as [[Predicate Compliance Oracle|oracles]] in the sense developed in §2: they evaluate predicates the system cannot evaluate internally and deposit their judgments into the model state where the formalism can use them.
+
+The formalism structures this interaction. It does not replace human judgment — it ensures that human judgment is exercised with full information about the constraint landscape, the cost of each binding constraint, and the requirements at stake.
+
+### Policy Parameterization
+
+A resolution policy $g$ is parameterized by a configuration $\theta$:
+
+- $d_X$: the choice of state-dependent distance — how "deviation from intent" is measured
+- $\gamma$: the complexity weight — the tradeoff between intent preservation and resolution simplicity
+- $\mathcal{C}_{\text{active}} \subseteq \mathcal{C}$: the set of constraints that are enforced — which checks the organization requires
+- **Oracle configuration**: which evaluation mechanisms are invoked (including human review steps), with what timeouts and fallbacks
+- **Automation boundary**: which steps are machine-executed and which require human sign-off
+
+Different configurations produce different policies. The **family** $\mathcal{G} = \{g_\theta : \theta \in \Theta\}$ is the set of all admissible resolution policies. There is no single correct policy — the right choice depends on the type of model content, the organizational context, the team's workflow conventions, and the specific constraints in play.
+
+### Admissible Actions and Valid States
+
+Given a configuration $\theta$, the **admissible action set** at state $X$ is:
+
+$$\mathcal{A}(X) = \{w \in \mathcal{U} \mid C_{\text{active}}(f(X, w)) \leq \mathbf{0}\}$$
+
+These are the commits that produce valid states under the active constraints. The **valid state set** is:
+
+$$\mathcal{V} = \{X \in \mathcal{X} \mid C_{\text{active}}(X) \leq \mathbf{0}\}$$
+
+A policy $g_\theta$ is **valid** if for every input $(X, u, v)$ with $X \in \mathcal{V}$, the output $w = g_\theta(X, \lambda_{uv}, \lambda_{vu}, u, v)$ satisfies $f(X, w) \in \mathcal{V}$. Valid policies never produce invalid states.
+
+Note that different $\mathcal{C}_{\text{active}}$ produce different $\mathcal{V}$ — different notions of "valid." An organization that enforces coupling constraints has a stricter $\mathcal{V}$ (fewer valid states) than one that treats them as advisory.
+
+### Policy Properties
+
+Three properties characterize well-behaved policies:
+
+- **Transparency.** When no conflict exists ($\mathcal{C}_{\text{conflict}} = \emptyset$), the policy does not modify the commits: $g_\theta(\ldots) = u \oplus v$. The pass-through regime is parameter-independent — it holds for every $\theta$.
+
+- **Validity.** The policy always produces a valid state: $f(X, g_\theta(\ldots)) \in \mathcal{V}$ for all valid inputs.
+
+- **Monotonicity.** If $\mathcal{C}_{\text{active}} \subseteq \mathcal{C}'_{\text{active}}$, then $\mathcal{A}'(X) \subseteq \mathcal{A}(X)$. More constraints mean fewer admissible resolutions. Tightening policy never expands options — it can only narrow them.
+
+Monotonicity has a practical consequence: adding a constraint to the active set can turn a previously feasible merge into an infeasible one, but never the reverse. Organizations should be aware that each additional required check reduces the space of automated resolutions available.
+
+### Composability and Governance Scoping
+
+Policies compose across the [[Flexo MMS#Engineering Operations Levels|operational levels]] through a nesting structure. Each level narrows the family $\mathcal{G}$ by fixing parameters that lower levels cannot override:
+
+| Level | What is set | Example |
+| ----- | ----------- | ------- |
+| **Organization** | $\mathcal{C}_{\text{active}}$, domain vs. optimization classification, automation boundary | "All coupling constraints are enforced; behavioral constraints require human oracle; automated synthesis is permitted for parametric conflicts" |
+| **Team** | $\gamma$, $d_X$ choice, oracle timeouts, review workflow | "Prefer minimal-diff resolutions (low $\gamma$); run simulation oracle with 60s timeout; two-reviewer sign-off on coupling conflicts" |
+| **Individual** | Judgment on validation-scope conflicts, oracle evaluations | Engineer reviews flagged $\mathcal{R}_{\text{impacted}}$, runs experiments, records behavioral constraint evaluations, decides between candidate resolutions |
+
+This is the [[Policy|policy]] structure from the Flexo governance model: scoped, assertive, tailorable, composable. The organization restricts $\mathcal{C}_{\text{active}}$ and sets the automation boundary. The team selects parameters and review workflows within that. The individual exercises judgment on what remains. Each level narrows $\Theta$ further, and the composition is well-defined because the nesting respects scope.
+
+[[Continuous Integration]] enforces the machine portion of the protocol. CI runs the verification-scope predicates in $\mathcal{C}_{\text{active}}$, gates merges on domain constraints, and reports shadow prices. Human steps — review, behavioral evaluation, judgment calls — are workflow steps that CI can *require* but not *perform*. The boundary between what CI executes and what it delegates to humans is itself a policy parameter, set at the organizational level.
 
 ---
 
 ## 6 Heuristic Policy Examples
 
-*Assistant-led: concrete merge strategies as example policies, with governance framing.*
+The policies below are concrete instances of the family $\mathcal{G}$ from §5. Each is defined by its parameter configuration $\theta$, its behavior, and the governance context in which it applies. They are ordered from simplest to most sophisticated — and from least to most information produced.
+
+### Last-Writer-Wins
+
+The simplest possible policy: accept the most recent commit based on timestamp; discard the other.
+
+- **Configuration**: $\mathcal{C}_{\text{active}} = \emptyset$. No constraints are checked. $\gamma$, $d_X$ are irrelevant.
+- **Behavior**: $w = u$ or $w = v$ depending on which was committed later. No constraint evaluation, no conflict detection, no synthesis.
+- **Governance context**: Individual-level discretion in low-stakes, exploratory work. Appropriate when the cost of an invalid state is low and contributors can fix problems manually.
+- **Limitation**: No validity guarantee. The resulting state may violate any constraint — domain or optimization. No shadow prices, no conflict report, no traceability.
+
+This is what most version control systems do by default for non-overlapping text changes. It works when the model has few constraints or when contributors are working on disjoint parts of the state.
+
+### Source-Wins and Target-Wins
+
+Priority policies: when conflicts exist, one branch's changes take precedence.
+
+- **Configuration**: $\mathcal{C}_{\text{active}}$ may or may not be checked. A priority rule replaces the optimization: conflicts are resolved in favor of $u$ (source-wins) or $v$ (target-wins) without evaluating the intent loss.
+- **Behavior**: $w = u \oplus v$ with conflicts resolved by dropping the lower-priority branch's conflicting changes.
+- **Governance context**: Asymmetric workflows. Target-wins is natural when the main branch is authoritative and feature branches must conform. Source-wins applies when a feature branch has been reviewed and approved, and the target should absorb it wholesale.
+- **Limitation**: Priority is blanket, not per-constraint. A source-wins policy drops *all* of the target's conflicting changes, even when some of them are more important than the source's. No shadow prices are produced because no optimization is solved.
+
+### Union-with-Constraint-Check
+
+Compose both commits; validate the result; escalate if invalid.
+
+- **Configuration**: $\mathcal{C}_{\text{active}}$ is organization-defined. No optimization is performed ($\gamma$, $d_X$ unused). Escalation replaces synthesis.
+- **Behavior**: Compute $w = u \oplus v$. Evaluate $C_{\text{active}}(f(X, w))$. If $\leq \mathbf{0}$, accept — this is the pass-through regime from §2. If any constraint is violated, report $\mathcal{C}_{\text{conflict}}$ and $\mathcal{R}_{\text{impacted}}$ and escalate to human review.
+- **Governance context**: Teams that want automated merges where possible but refuse to produce invalid states. The organization defines $\mathcal{C}_{\text{active}}$; [[Continuous Integration|CI]] enforces the check; the team reviews escalated conflicts.
+- **Tradeoff**: This policy produces conflict reports (which constraints failed, which requirements are impacted) but does not attempt resolution. It is a *diagnostic* policy — it tells you what's wrong without proposing a fix. The human receives the structured report and decides.
+
+This is a natural starting point for organizations adopting constraint-aware merging. It requires only the [[Predicate Compliance Oracle]] — no optimizer — and it never produces an invalid state.
+
+### Constraint-Aware Synthesis
+
+The full optimization from §2: minimize intent loss subject to constraint satisfaction.
+
+- **Configuration**: All parameters active — $\mathcal{C}_{\text{active}}$, $d_X$, $\gamma$, oracle configuration, automation boundary.
+- **Behavior**: When $\mathcal{C}_{\text{conflict}} \neq \emptyset$, solve $w^* = \arg\min_{w} L_{\text{intent}}(w; u, v)$ subject to $C_{\text{active}}(f(X, w)) \leq \mathbf{0}$. Report shadow prices $\mu^*$, requirement prices $\nu$, and the full traceability chain.
+- **Governance context**: High-stakes, constraint-rich models — safety-critical systems, regulated industries, large multi-team projects where the cost of an invalid merge is high and the cost of manual resolution is also high.
+- **What it produces**: A candidate resolution $w^*$, a shadow price vector $\mu^*$ explaining which constraints shaped it, requirement prices $\nu$ tracing the impact to stakeholder concerns, and the full traceability chain from §2. A human reviewer receives the proposed resolution *with its explanation* and decides whether to accept, modify, or reject it.
+- **Note**: This is the general case. All other policies in this section are degenerations or approximations — they arise from restricting $\theta$ (disabling the optimizer, emptying $\mathcal{C}_{\text{active}}$, replacing synthesis with escalation).
+
+### Escalation-Only
+
+Never auto-resolve conflicts; always defer to human judgment.
+
+- **Configuration**: $\mathcal{C}_{\text{active}}$ is organization-defined. Synthesis is disabled — the automation boundary excludes resolution entirely.
+- **Behavior**: If $\mathcal{C}_{\text{conflict}} \neq \emptyset$, reject the merge and report $(\mathcal{C}_{\text{conflict}}, \mathcal{R}_{\text{impacted}}, \lambda_{uv}, \lambda_{vu})$. No resolution commit is produced.
+- **Governance context**: Safety-critical or regulatory environments where automated resolution is unacceptable — where the organization's policy is that every conflict requires human review, full stop.
+- **What it produces**: The formalism still adds value even though it produces no resolution. The conflict report — which constraints are violated, which requirements are impacted, the violation magnitudes in both orderings — gives the human reviewer structured information rather than a raw diff. The reviewer knows *what* to look at and *why* it matters.
+
+### The Governance Connection
+
+These five policies are not merely technical options. They are **organizational decisions** about risk tolerance, automation scope, and the boundary between machine [[Verification and Validation|verification]] and human judgment.
+
+The formalism makes these decisions explicit. Without it, the choice between last-writer-wins and escalation-only is implicit in code — buried in merge driver configuration, CI pipeline logic, and team conventions. With it, the choice is a parameter configuration $\theta$ with documented consequences: which constraints are checked, which shadow prices are produced, what information the human reviewer receives, and what validity guarantees hold.
+
+The progression from last-writer-wins to constraint-aware synthesis is a progression in **information**: from no constraint evaluation, to pass/fail checks, to full shadow prices and traceability. Each step produces more information about the merge and requires more infrastructure (oracle evaluation, optimization, dual variable computation). The right policy for an organization depends on how much information it needs and what it is willing to invest in producing it.
+
 
 ---
 ← [[Flexo MMS]] · [[Flexo Conflict Resolution Mapping]]
