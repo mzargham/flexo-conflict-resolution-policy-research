@@ -59,21 +59,21 @@ sequenceDiagram
     F->>F: Three-way diff: X₀→u₂, X₀→main (no divergence)
     F->>CI: Evaluate C_active on merged state
     CI-->>F: All constraints satisfied
-    F-->>A: 201 Created — merge commit M₁
-    Note over F: main now at M₁ = f(X₀, u)
+    F-->>A: 201 Created — merge commit X₁
+    Note over F: main now at X₁ = f(X₀, u)
 
     Note over B, F: Bob merges second — main has advanced
 
     B->>F: POST /branches/main/merge (source: cooling-redesign)
     F->>F: Find common ancestor X₀
-    F->>F: Three-way diff: X₀→v₂, X₀→M₁
+    F->>F: Three-way diff: X₀→v₂, X₀→X₁
     F->>F: Cross-apply: f(f(X₀, u), v) and f(f(X₀, v), u)
     F->>CI: Evaluate C_active on cross-applied states
     CI-->>F: Constraint violations detected
     F-->>B: 409 Conflict
 ```
 
-**What this establishes.** The `par` block makes parallel work visible as a first-class structural feature. Alice's merge demonstrates the *transparency property* from the formalism: when $\mathcal{C}_{\text{conflict}} = \emptyset$, the [[Policy|policy]] does not modify the commits. Bob's 409 is the entry point for everything that follows — the system has detected that the commits interact, but it has not yet classified how or proposed what to do about it.
+**What this establishes.** The `par` block makes parallel work visible as a first-class structural feature. Alice's merge demonstrates the *transparency property* from the formalism: when $\mathcal{C}_{\text{conflict}} = \emptyset$, the [[Policy|policy]] does not modify the commits. The result is $X_1 = f(X_0, u)$ — the merge commit that applies Alice's changes $u$ to the common ancestor $X_0$. When Bob requests his merge, `main` is now at $X_1$, not $X_0$, so the system must evaluate both application orderings: $f(X_1, v)$ and $f(f(X_0, v), u)$. Bob's 409 is the entry point for everything that follows — the system has detected that the commits interact, but it has not yet classified how or proposed what to do about it.
 
 **Operational levels visible.** Individual (Alice and Bob making commits), Team (branch workflow, [[Continuous Integration|CI]] as the enforcement mechanism).
 
@@ -93,10 +93,10 @@ sequenceDiagram
     participant Oracle as Constraint Oracle
     participant PE as Policy Engine
 
-    ME->>Q: Materialize snapshots for X₀, M₁, v₂
+    ME->>Q: Materialize snapshots for X₀, X₁, v₂
     Q-->>ME: Snapshots ready
 
-    ME->>Diff: Diff X₀ → M₁ (Alice's changes)
+    ME->>Diff: Diff X₀ → X₁ (Alice's changes)
     ME->>Diff: Diff X₀ → v₂ (Bob's changes)
     Diff-->>ME: δ_alice (insert/delete graphs)
     Diff-->>ME: δ_bob (insert/delete graphs)
