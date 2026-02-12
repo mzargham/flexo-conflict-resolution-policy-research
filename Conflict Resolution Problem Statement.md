@@ -82,15 +82,201 @@ The remainder of this document makes the framing precise. §2 states the formal 
 
 ## 2 Formal Problem Description
 
-*To be provided by the user — the optimal control formulation: state variable, dynamics, cost functional, constraint structure.*
+### Requirements and Constraints
+
+In [[SysML v2]], requirements and constraints are ontologically distinct. A *requirement* is a stakeholder need — "the system shall…" — evaluated by judgment. A *constraint* is a computable predicate over model state — something the system can check mechanically.
+
+| Aspect | Requirement | Constraint |
+| ------ | ----------- | ---------- |
+| Nature | Stakeholder need | Computable predicate |
+| Expresses | *What* must be achieved | *How* we verify achievement |
+| Evaluation | Judgment | Computation |
+| Role in V&V | What we [[Verification and Validation\|validate]] | How we [[Verification and Validation\|verify]] |
+
+Let $\mathcal{R} = \{r_1, r_2, \ldots, r_n\}$ be the set of requirements. Let $\mathcal{C} = \{c_1, c_2, \ldots, c_m\}$ be the set of constraints.
+
+The **satisfaction relation** $S \subseteq \mathcal{C} \times \mathcal{R}$ captures how constraints provide evidence for requirements. We write $c \vdash r$ to mean that constraint $c$ demonstrates (partially or fully) that requirement $r$ is satisfied. The relation is many-to-many: a constraint may demonstrate multiple requirements, and a requirement may be demonstrated by multiple constraints.
+
+The formalism operates at the constraint level — these are what the system can evaluate. But it traces back to the requirement level — these are what stakeholders care about.
+
+### Model State and Commits
+
+A **model state** $X \in \mathcal{X}$ is a structured representation of the [[Model|model]] at a given point in its history. Formally:
+
+$$X = (E, R, A)$$
+
+where $E$ is the set of elements, $R$ is the set of typed relationships between elements, and $A$ assigns attribute values to elements. In [[Flexo MMS]], this corresponds to the set of [[RDF]] triples in a snapshot's named graph.
+
+A **commit** $u \in \mathcal{U}$ is a description of intended state change: elements to add or remove, relationships to add or remove, attribute values to modify. In Flexo, a commit is a [[Diff and Delta|SPARQL UPDATE patch]] applied to the model graph.
+
+The **state transition function** $f$ applies a commit to a state:
+
+$$X^+ = f(X, u)$$
+
+yielding a new state $X^+$. This is the control-theoretic framing: the model state is the state variable, and commits are control inputs.
+
+### Composition of Commits
+
+Given two commits $u$ and $v$, their **composition** $u \oplus v$ denotes the intended union of their changes — what the merged result *should* be if both sets of changes could coexist without interference.
+
+Composition is **not commutative in general**. Applying $u$ first and then $v$ may yield a different state than applying $v$ first and then $u$:
+
+$$f(f(X, u), v) \neq f(f(X, v), u) \quad \text{in general}$$
+
+Commutativity holds only when the commits modify disjoint portions of the state — when there is no coupling between the changes. This non-commutativity is the structural reason that conflict detection must evaluate *both* orderings, and it is what makes the problem fundamentally different from set union.
+
+### Constraint Evaluation
+
+Each constraint $c_i : \mathcal{X} \to \mathbb{R}$ maps a model state to a real number, with the convention:
+
+$$c_i(X) \leq 0 \implies \text{constraint } c_i \text{ is satisfied}$$
+
+A positive value indicates violation; its magnitude indicates severity. The **constraint evaluation operator** $C : \mathcal{X} \to \mathbb{R}^m$ collects all constraint evaluations into a vector:
+
+$$C(X) = \begin{pmatrix} c_1(X) \\ \vdots \\ c_m(X) \end{pmatrix}$$
+
+A state is valid when $C(X) \leq \mathbf{0}$ (componentwise). The operator $C$ is the formal counterpart of the [[Predicate Compliance Oracle]] — the uniform interface over heterogeneous constraint evaluation mechanisms.
+
+Constraints partition by scope:
+
+| Category                         | Description                | Example                                        |
+| -------------------------------- | -------------------------- | ---------------------------------------------- |
+| **Local** ($\mathcal{C}_L$)      | Single element             | mass $\geq$ 0                                  |
+| **Relational** ($\mathcal{C}_R$) | Between connected elements | port types must match                          |
+| **Aggregate** ($\mathcal{C}_A$)  | Over collections           | total mass $\leq$ budget                       |
+| **Coupling** ($\mathcal{C}_K$)   | Across design disciplines  | thermal dissipation $\leq$ structural capacity |
+| **Behavioral** ($\mathcal{C}_B$) | Dynamic semantics of model elements | state machine must be deterministic            |
+
+**Coupling constraints** are the primary source of machine identifiable merge conflicts. They span decisions made by different contributors — and they are why individually valid commits can be jointly invalid.
+
+This classification is by scope. A separate distinction — between constraints that define the domain (pass/fail predicates like schema conformance) and constraints that admit degrees of violation (continuous-valued predicates like budget slack) — is developed in §4, where it determines which constraints carry shadow prices.
+
+Behavioral constraints deserve explicit comment. They are included because the models under version control are not static artifacts — they describe systems with dynamic behavior, and the engineers working with them need behavioral properties to participate in conflict resolution. Some behavioral constraints can be evaluated computationally: simulation pipelines that check stability, reachability, or termination and return numerical results. Others require human judgment — an engineer runs an experiment, performs analysis, or exercises domain expertise, and records the outcome.
+
+In both cases, the result enters the model state as a stored value, making the satisfaction status available for computation by the [[Predicate Compliance Oracle]]. The human or simulation pipeline acts as an oracle in the literal sense: it evaluates a predicate the system cannot evaluate internally and deposits the answer where the system can use it. Once recorded, a behavioral constraint's satisfaction value is operationally identical to any other constraint value in the formalism.
+
+The critical caveat is **staleness**. A stored behavioral evaluation is valid only relative to the model state against which it was produced. When any upstream model element that the evaluation depended on changes — a parameter is modified, a component is replaced, an interface is restructured — the stored result is **defunct** and must be re-evaluated before it can be trusted. Tracking this dependency and invalidation is itself a constraint management problem, but for the purposes of this formalism, the key point is simpler: behavioral constraints participate in the constraint evaluation operator $C$ on the same terms as all other constraints, with the understanding that their values may require re-evaluation when the model state changes beneath them.
+
+### The Concurrent Modification Problem
+
+Two contributors pull from a common ancestor state $X$ where all constraints are satisfied: $C(X) \leq \mathbf{0}$. Contributor A produces commit $u$; contributor B produces commit $v$. Each is individually valid:
+
+$$C(f(X, u)) \leq \mathbf{0} \qquad C(f(X, v)) \leq \mathbf{0}$$
+
+We seek a reconciled state $X^+$ that satisfies all constraints. To find it, we first assess the damage. Define the **cross-application states** — what happens when we apply each commit on top of the other:
+
+$$X_{uv} = f(f(X, u), v) \qquad X_{vu} = f(f(X, v), u)$$
+
+and evaluate constraints on both:
+
+$$\lambda_{uv} = C(X_{uv}) \qquad \lambda_{vu} = C(X_{vu})$$
+
+These **constraint violation vectors** reveal where the commits interact. A constraint conflict exists whenever either ordering produces a violation:
+
+$$\mathcal{C}_{\text{conflict}} = \{c_i \in \mathcal{C} \mid (\lambda_{uv})_i > 0 \;\lor\; (\lambda_{vu})_i > 0\}$$
+
+The **impacted requirements** are those demonstrated by conflicting constraints:
+
+$$\mathcal{R}_{\text{impacted}} = \{r_j \in \mathcal{R} \mid \exists\, c_i \in \mathcal{C}_{\text{conflict}} : c_i \vdash r_j\}$$
+
+Since $u$ and $v$ are individually valid, any violations in $\lambda_{uv}$ or $\lambda_{vu}$ arise from *interactions* between the commits — neither commit is defective on its own. These interactions can trigger violations at any constraint scope: a relational constraint when both commits connect to the same port, an aggregate constraint when both consume remaining slack in a shared budget, a behavioral constraint when both modify inputs to the same simulation. The common thread is shared dependencies in the model state, not any single constraint category.
+
+### Resolution Policy
+
+The **resolution [[Policy|policy]]** $g$ takes the ancestor state, both violation vectors, and both commits, and produces a resolution commit:
+
+$$w = g(X, \lambda_{uv}, \lambda_{vu}, u, v)$$
+
+such that $X^+ = f(X, w)$ and $C(X^+) \leq \mathbf{0}$.
+
+The policy operates in two regimes:
+
+| Condition                                      | Regime           | Behavior                                                                                                                    |
+| ---------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| $\mathcal{C}_{\text{conflict}} = \emptyset$    | **Pass-through** | $w := u \oplus v$ satisfying $C(f(X, u \oplus v)\le 0$. No conflict; commits compose without modification.                  |
+| $\mathcal{C}_{\text{conflict}} \neq \emptyset$ | **Synthesis**    | $w := \hbox{argmin}_w\, L(w;u,v)$ s.t. $C(f(X,w))\le0$. The policy synthesizes a resolution that satisfies all constraints. |
+
+Two properties hold by construction:
+
+- **Transparency**: When no conflict exists, the policy does not modify the commits. The result is exactly the composition $u \oplus v$.
+- **Validity**: In both regimes, the resulting state satisfies all constraints: $C(f(X, w)) \leq \mathbf{0}$.
+
+### Synthesis via Constrained Optimization
+
+When $\mathcal{C}_{\text{conflict}} \neq \emptyset$, the policy synthesizes $w^*$ by solving a constrained optimization problem. The **primal problem** is:
+
+$$\min_{w \in \mathcal{U}} \; L_{\text{intent}}(w;\, u, v) \quad \text{subject to} \quad C(f(X, w)) \leq \mathbf{0}$$
+
+The **intent loss** $L_{\text{intent}}$ measures how far the resolution deviates from the ideal composition:
+
+$$L_{\text{intent}}(w;\, u, v) = d_X(w,\, u \oplus v) \;+\; \gamma \cdot \|w\|_{\text{complexity}}$$
+
+The first term penalizes deviation from what the contributors intended. The distance $d_X$ is state-dependent: the same commit description can have different impact depending on the model state it is applied to, so measuring how far $w$ deviates from $u \oplus v$ requires knowledge of the ancestor state $X$ against which both are evaluated. The second term regularizes toward simpler resolutions. The weight $\gamma$ is a policy parameter that controls the tradeoff between the two terms.
+
+The **Lagrangian** associates a multiplier $\mu_i \geq 0$ with each constraint:
+
+$$\mathcal{L}(w, \mu) = L_{\text{intent}}(w;\, u, v) \;+\; \mu^\top C(f(X, w))$$
+
+At the optimum, the **dual variables** $\mu^*$ acquire a concrete interpretation as **shadow prices**. The shadow price $\mu^*_i$ measures the sensitivity of the resolution objective to constraint $c_i$:
+
+- A high $\mu^*_i$ means constraint $c_i$ is *binding* — it is tight, and relaxing it would materially improve the resolution. This constraint actively shaped the outcome.
+- A zero $\mu^*_i$ means constraint $c_i$ is *slack* — it is satisfied with margin and did not influence the resolution.
+
+The shadow prices make explicit *which constraints matter for this particular merge*. This information is valuable whether the resolution is computed by an optimizer, selected from a menu of heuristics, or decided by a human engineer.
+
+### Requirement Prices
+
+The dual variables live at the constraint level. To trace their impact to stakeholder concerns, we aggregate them to the requirement level via the satisfaction relation. For each impacted requirement $r_j$:
+
+$$\nu_j = \sum_{c_i \in \mathcal{C}(r_j)} \mu^*_i$$
+
+where $\mathcal{C}(r_j) = \{c_i \mid c_i \vdash r_j\}$ is the set of constraints that demonstrate requirement $r_j$. The **requirement price** $\nu_j$ indicates how much requirement $r_j$ influenced the resolution overall.
+
+The traceability chain is complete: every deviation of $w^*$ from $u \oplus v$ is attributable to a binding constraint ($\mu^*_i > 0$), which in turn demonstrates a requirement ($c_i \vdash r_j$), which traces to a stakeholder need. No unexplained modifications.
+
+### Assumptions
+
+The formulation rests on four essential assumptions:
+
+1. **Individual validity.** Each commit, applied in isolation to the common ancestor, satisfies all constraints: $C(f(X, u)) \leq \mathbf{0}$ and $C(f(X, v)) \leq \mathbf{0}$. Contributors have locally validated their changes.
+
+2. **Non-commutativity of composition.** $f(f(X,u), v) \neq f(f(X,v), u)$ in general. Commits compose order-dependently; commutativity holds only when they modify disjoint state. This is the structural reason both orderings must be evaluated.
+
+3. **Feasibility.** The feasible set $\{w \in \mathcal{U} \mid C(f(X, w)) \leq \mathbf{0}\}$ is non-empty. When this fails — when no valid resolution exists — the policy escalates to human review rather than producing an invalid state.
+
+4. **Conservative conflict detection.** If *either* application order violates constraints, the policy enters analysis mode. If one order is the valid and the other is invalid then the valid ordering is the default synthesis.
 
 ---
 
 ## 3 Notation
 
-*To be provided by the user — notation conventions from the generalized dynamical systems framework: state spaces, action sets, transition maps.*
+The notation draws on a generalized dynamical systems framework — state spaces, control inputs, transition functions — applied to model version control.
 
----
+| Symbol | Meaning |
+| ------ | ------- |
+| $X$ | Model state (elements, relationships, attributes) |
+| $u, v, w$ | Commits (control inputs) |
+| $u \oplus v$ | Composition of commits (order-dependent; not commutative in general) |
+| $f(X, u)$ | State transition: apply commit $u$ to state $X$ |
+| $\mathcal{C}$, $c_i$ | Set of constraints; individual constraint ($\leq 0$ when satisfied) |
+| $C(X)$ | Constraint evaluation operator (vector of all $c_i(X)$) |
+| $\mathcal{R}$, $r_j$ | Set of requirements; individual requirement |
+| $c \vdash r$ | Constraint $c$ demonstrates requirement $r$ |
+| $\lambda$ | Constraint violation vector (from cross-application analysis) |
+| $\mu^*$ | Shadow prices (Lagrange multipliers at the optimum) |
+| $\nu$ | Requirement prices (aggregated from $\mu^*$ via satisfaction relation) |
+| $g$ | Resolution policy |
+| $\mathcal{C}_{\text{conflict}}$ | Set of conflicting constraints |
+| $\mathcal{X}$ | Space of model states |
+| $\mathcal{U}$ | Space of commits (control inputs) |
+| $d_X$ | State-dependent distance between commits |
+| $\gamma$ | Policy weight (tradeoff between intent preservation and resolution complexity) |
+| $L_{\text{intent}}$ | Intent loss (objective measuring deviation from ideal composition) |
+| $\theta$ | Policy configuration (parameters defining a specific resolution policy) |
+| $\mathcal{G}$ | Family of resolution policies $\{g_\theta : \theta \in \Theta\}$ |
+| $\mathcal{C}_{\text{active}}$ | Active constraint set (subset of $\mathcal{C}$ enforced by policy) |
+| $\mathcal{A}(X)$ | Admissible action set (commits producing valid states from $X$) |
+| $\mathcal{V}$ | Valid state set $\{X \in \mathcal{X} \mid C_{\text{active}}(X) \leq \mathbf{0}\}$ |
 
 ## 4 Constrained Optimization and Lagrange Duality
 
