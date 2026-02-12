@@ -62,6 +62,30 @@ The Layer 1 service uses **optimistic concurrency control** to prevent lost upda
 
 This prevents concurrent *writes to the same branch* but does not address the *merge of divergent branches* — which is the domain of the [[Flexo Conflict Resolution Mapping|conflict resolution formalism]].
 
+## State Transition Semantics
+
+The merge operation can be specified as a state transition with pre- and post-conditions:
+
+**Pre-conditions:**
+
+- Branch $B_{\text{target}}$ points to $\text{commit}_t$ with snapshot $G_t$ materialized
+- Source commit $\text{commit}_s$ is identified (on source branch or by ID)
+- A common ancestor $\text{commit}_{\text{base}} = \text{LCA}(\text{commit}_t, \text{commit}_s)$ exists
+
+**Post-conditions (success):**
+
+- Branch $B_{\text{target}}$ points to $\text{commit}_{\text{merge}}$
+- $\text{commit}_{\text{merge}}.\text{parents} = \{\text{commit}_t, \text{commit}_s\}$
+- $\text{snapshot}(\text{commit}_{\text{merge}}) = \text{merge}(G_t, G_s, G_{\text{base}})$
+- $\text{snapshot}(\text{commit}_{\text{merge}})$ is materialized
+
+**Post-conditions (conflict):**
+
+- Branch $B_{\text{target}}$ is unchanged
+- A set of conflicting element identities is returned to the client
+
+**Invariant:** The target branch always has a materialized snapshot — whether merge succeeds or fails.
+
 ## Open Questions
 
 - **Merge commit parents**: How should multiple parents be represented in the metadata graph? Extend `mms:parent` to allow multiple values, or introduce a separate predicate?

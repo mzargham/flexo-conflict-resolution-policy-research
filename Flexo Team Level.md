@@ -23,6 +23,8 @@ As long as a branch exists, it will always have a snapshot materialized in the d
 
 This is a resource management mechanism: storing a complete copy of a project's model for each commit can quickly impact query performance or exhaust the storage capacity of the underlying [[quadstore]]. Flexo MMS conserves resources when possible — e.g., a branch and a lock pointing to the same commit share the same snapshot.
 
+When multiple clients need stable access to the same historical commit, each creates its own namespaced lock. The snapshot is materialized when the first lock is created and remains materialized as long as any lock references that commit. Deleting a lock decrements the effective reference count; the snapshot becomes eligible for eviction only when no locks (and no branches) reference it. This reference-counting behavior makes locks a coordination primitive: clients can independently acquire and release access to historical state without explicit coordination with each other.
+
 ## Team Workflow Example
 
 1. Create feature branch from `develop`

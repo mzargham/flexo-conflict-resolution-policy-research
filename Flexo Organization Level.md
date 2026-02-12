@@ -26,6 +26,20 @@ Flexo-MMS exposes CRUD endpoints for management of [[RDF]] graphs (creating Orgs
 
 Partitions delimit responsibility for model assets but do not imply an absence of inter-collection dependencies.
 
+## Identity Scheme
+
+Every entity in the Flexo hierarchy has a URI-based identity. The mutability column indicates whether the entity's *content* can change after creation (the URI itself is always stable).
+
+| Entity | URI Pattern | Mutability |
+| --- | --- | --- |
+| Org | `<base>/orgs/{orgId}` | Mutable metadata |
+| Repo | `<base>/orgs/{orgId}/repos/{repoId}` | Mutable metadata |
+| Branch | `<base>/.../branches/{branchId}` | Mutable (advances to new commits) |
+| Commit | `<base>/.../commits/{commitId}` | Immutable |
+| Lock | `<base>/.../locks/{lockId}` | Immutable (points to fixed commit) |
+| Tag | `<base>/.../tags/{tagId}` | Immutable |
+| Element | `urn:uuid:{elementId}` | Immutable within a commit |
+
 ## Deployment Infrastructure
 
 The Layer 1 service requires a [[SPARQL]] 1.1 compliant [[quadstore]] as a backend. The reference stack uses [[Apache Jena Fuseki]], which binds locally on port 3030 ([flexo-mms-layer1-service](https://github.com/Open-MBEE/flexo-mms-layer1-service)).
