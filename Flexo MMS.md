@@ -45,7 +45,7 @@ The operational levels above describe *who* interacts with Flexo and at what sco
 - [[Conflict Classification]] — taxonomy of conflict types and constraint categories
 - [[Predicate Compliance Oracle]] — abstract constraint evaluator; conceptual hook for dual variables
 
-→ [[Flexo Conflict Resolution Mapping]]
+→ [[Flexo Conflict Resolution Mapping]] · [[Conflict Resolution Problem Statement]]
 
 ## Key Repositories
 

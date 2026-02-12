@@ -532,7 +532,7 @@ The formalism assumes a single repository with a single set of constraints and a
 
 ### Implementation Mapping
 
-The [[Flexo Conflict Resolution Mapping]] — connecting the formalism developed here to concrete [[Flexo MMS]] operations (the merge endpoint, SPARQL infrastructure, [[Continuous Integration|CI]] pipelines, and the governance model) — remains to be developed. This mapping is the bridge between the problem statement and a working implementation.
+The [[Flexo Conflict Resolution Mapping]] connects the formalism developed here to concrete [[Flexo MMS]] operations — the merge endpoint, SPARQL infrastructure, [[Continuous Integration|CI]] pipelines, and the governance model. That document maps the *what* and *where*; the open problems above define what remains to be solved.
 
 ---
 
