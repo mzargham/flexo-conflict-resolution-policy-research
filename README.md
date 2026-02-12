@@ -27,6 +27,7 @@ This repository is an [Obsidian](https://obsidian.md/) vault. To read the conten
 | Understand Flexo's architecture and data model                      | [RDF](RDF.md) → [Quadstore](Quadstore.md) → [SPARQL](SPARQL.md)                         |
 | Understand the governance and policy framework                      | [Verification and Validation](Verification%20and%20Validation.md) → [Policy](Policy.md) |
 | See what models are, what merge looks like today and what's missing | [Model](Model.md) → [Merge](Merge.md)                                                     |
+| See the lifecycle in action with sequence diagrams                  | [A Policy-based Approach to Model Lifecycle Management with Flexo](A%20Policy-based%20Approach%20to%20Model%20Lifecycle%20Management%20with%20Flexo.md) |
 
 ## Links
 
