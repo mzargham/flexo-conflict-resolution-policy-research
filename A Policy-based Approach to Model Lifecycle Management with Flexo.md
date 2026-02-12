@@ -104,7 +104,7 @@ sequenceDiagram
     ME->>ME: Correlate diffs — identify overlapping triples
 
     Note over ME: Syntactic conflict found
-    ME->>ME: Both modified Inverter.switchingFrequency<br/>Alice: 20kHz → 25kHz, Bob: 20kHz → 18kHz
+    ME->>ME: Both modified Inverter.switchingFrequency<br/>Alice: 12kHz → 15kHz, Bob: 12kHz → 10kHz
 
     ME->>Q: Construct candidate merged state X_merged
     ME->>Oracle: Evaluate C_active(X_merged)
@@ -113,7 +113,7 @@ sequenceDiagram
     Oracle-->>ME: FAIL — dangling reference:<br/>Alice references CoolantManifold,<br/>Bob deleted it
 
     Note over Oracle: Semantic conflict found
-    Oracle-->>ME: FAIL — c_thermal violated:<br/>thermal dissipation exceeds cooling capacity by 12W
+    Oracle-->>ME: FAIL — c_thermal violated:<br/>thermal dissipation exceeds cooling capacity by 1.2kW
 
     Oracle-->>ME: PASS — c_mass satisfied (slack)
     Oracle-->>ME: PENDING — c_stability requires evaluation
@@ -164,10 +164,10 @@ sequenceDiagram
             S-->>D: FAIL — dangling reference:<br/>Alice→CoolantManifold (deleted by Bob)
         and
             D->>Q: SPARQL aggregate: total mass ≤ budget?
-            Q-->>D: PASS — mass = 47.2kg, budget = 50kg<br/>c_mass satisfied, slack = 2.8kg
+            Q-->>D: PASS — mass = 372kg, budget = 385kg<br/>c_mass satisfied, slack = 13kg
         and
             D->>P: Solve: thermal dissipation ≤ cooling capacity?
-            P-->>D: FAIL — dissipation = 312W, capacity = 300W<br/>c_thermal violated, magnitude = +12W
+            P-->>D: FAIL — dissipation = 16.2kW, capacity = 15.0kW<br/>c_thermal violated, magnitude = +1.2kW
         end
     end
 
@@ -186,7 +186,7 @@ sequenceDiagram
 **What this reveals.** The oracle is not a gate that opens or closes. It is a *process* with different temporal characteristics for different predicates:
 
 - SHACL and SPARQL return immediately — binary, deterministic, no human in the loop.
-- The parametric solver returns in seconds with a *magnitude* ($+12\text{W}$), not just pass/fail. This continuous-valued score is what makes shadow prices meaningful — you need a gradient to compute sensitivity.
+- The parametric solver returns in seconds with a *magnitude* ($+1.2\text{kW}$), not just pass/fail. This continuous-valued score is what makes shadow prices meaningful — you need a gradient to compute sensitivity.
 - The stability check is *pending*. Bob must run an experiment, exercise judgment, and deposit the result. The system cannot proceed to full resolution until this oracle responds, but it can begin resolving the verification-scope conflicts in the meantime.
 
 The two `rect` regions make the V&V boundary architecturally visible. Everything in the green region is computable and can be part of a [[Continuous Integration|CI]] pipeline. Everything in the amber region requires human participation — CI can *require* it but cannot *perform* it.
@@ -220,9 +220,9 @@ sequenceDiagram
     Note over PE: Resolution (B): Thermal coupling — semantic, verification-scope
 
     PE->>P: Generate feasible resolutions for c_thermal
-    P-->>PE: Candidate 1: Reduce motor power 290W→278W
-    P-->>PE: Candidate 2: Increase cooling capacity 300W→312W
-    P-->>PE: Candidate 3: Adjust switching freq 25→22kHz + flow rate +8%
+    P-->>PE: Candidate 1: Derate motor from 180kW to 165kW
+    P-->>PE: Candidate 2: Increase cooling capacity 15.0kW→16.2kW
+    P-->>PE: Candidate 3: Adjust switching freq 15→13kHz + flow rate +8%
 
     Note over PE: Shadow prices and intent loss for each candidate
 
@@ -231,7 +231,7 @@ sequenceDiagram
 
     Note over A, B: Candidate 1: L_intent = 0.34 (high — Alice loses power)<br/>Candidate 2: L_intent = 0.28 (moderate — Bob adds capacity)<br/>Candidate 3: L_intent = 0.11 (low — both adjust slightly)
 
-    Note over A, B: Shadow prices:<br/>μ*_thermal > 0 (binding — shaped all candidates)<br/>μ*_mass = 0 (slack — 2.8kg margin, did not influence)
+    Note over A, B: Shadow prices:<br/>μ*_thermal > 0 (binding — shaped all candidates)<br/>μ*_mass = 0 (slack — 13kg margin, did not influence)
 
     A->>PE: Select Candidate 3
     B->>PE: Concur — Candidate 3
@@ -258,7 +258,7 @@ sequenceDiagram
     Note over PE: Resolution (C): Control loop stability — semantic, validation-scope
 
     PE->>H: Request: evaluate c_stability on proposed merged state<br/>(with Candidate 3 applied)
-    Note over H: Bob runs simulation with merged parameters:<br/>motor at 290W, freq at 22kHz, flow rate +8%
+    Note over H: Bob runs simulation with merged parameters:<br/>motor at 180kW, freq at 13kHz, flow rate +8%
     H->>H: Simulation result: stable under ±10% perturbation
     H->>PE: Deposit judgment: c_stability = -0.12 (satisfied)
     Note over PE: Bob's judgment enters model state<br/>as a stored evaluation — the oracle<br/>contract is fulfilled
@@ -287,7 +287,7 @@ No unexplained modifications. The dangling reference fix traces to schema confor
 
 ## Diagram 5: Infeasibility and Escalation Across Levels
 
-An alternative scenario. Suppose the organization had recently tightened the mass budget from 50kg to 48kg — and Alice's motor upgrade adds 2.5kg. Now $c_{\text{thermal}}$ and $c_{\text{mass}}$ are mutually unsatisfiable: every resolution that fixes the thermal violation (by adjusting cooling capacity or motor parameters) pushes mass over budget, and every resolution that respects mass requires cutting motor power below the upgrade's minimum viable threshold. No valid resolution exists.
+An alternative scenario. Suppose the organization had recently tightened the mass budget from 385kg to 375kg — and Alice's motor upgrade adds 12kg. Now $c_{\text{thermal}}$ and $c_{\text{mass}}$ are mutually unsatisfiable: every resolution that fixes the thermal violation (by adjusting cooling capacity or motor parameters) pushes mass over budget, and every resolution that respects mass requires cutting motor power below the upgrade's minimum viable threshold. No valid resolution exists.
 
 ```mermaid
 sequenceDiagram
@@ -311,9 +311,9 @@ sequenceDiagram
 
     Note over OA: Three options:<br/>1. Relax c_mass (increase mass budget)<br/>2. Reclassify c_thermal as advisory<br/>3. Reject the motor upgrade
 
-    OA->>OA: Decision: relax mass budget by 2kg<br/>(48kg → 50kg), documented with rationale
+    OA->>OA: Decision: relax mass budget by 10kg<br/>(375kg → 385kg), documented with rationale
 
-    OA->>F: Update C_active: c_mass threshold = 50kg
+    OA->>F: Update C_active: c_mass threshold = 385kg
 
     F->>PE: Re-attempt merge with updated constraints
     PE->>PE: Feasible region restored
