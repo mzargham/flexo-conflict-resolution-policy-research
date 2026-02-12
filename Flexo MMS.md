@@ -6,12 +6,23 @@ Models in Flexo are not limited to enterprise model development platforms — it
 
 ## Engineering Operations Levels
 
-| Level | Concern | Note |
-|-------|---------|------|
-| 1 — Ecosystem | Organizations sharing model assets across enterprise boundaries | [[Flexo Ecosystem Level]] |
-| 2 — Organization | IT/platform team maintaining Flexo for the enterprise | [[Flexo Organization Level]] |
-| 3 — Team | Engineering team developing and maintaining specific model assets | [[Flexo Team Level]] |
-| 4 — Individual | Engineer proposing, evaluating, or merging changes to model elements | [[Flexo Individual Contributor Level]] |
+| Level            | Concern                                                              | Note                                   |
+| ---------------- | -------------------------------------------------------------------- | -------------------------------------- |
+| 1 — Ecosystem    | Organizations sharing model assets across enterprise boundaries      | [[Flexo Ecosystem Level]]              |
+| 2 — Organization | IT/platform team maintaining Flexo for the enterprise                | [[Flexo Organization Level]]           |
+| 3 — Team         | Engineering team developing and maintaining specific model assets    | [[Flexo Team Level]]                   |
+| 4 — Individual   | Engineer proposing, evaluating, or merging changes to model elements | [[Flexo Individual Contributor Level]] |
+
+## Architectural Layers
+
+The operational levels above describe *who* interacts with Flexo and at what scope. The architectural layers below describe *how* data flows through the system. The two hierarchies are orthogonal: an individual contributor interacts via the SysML v2 API, but their request traverses all four layers.
+
+| Layer | Component | Protocol | Responsibility | Note |
+| --- | --- | --- | --- | --- |
+| 4 — Client | VSCode, Jupyter, Cameo MDK, scripts | HTTP/REST | Model editing, visualization, analysis | [[Flexo Individual Contributor Level]] |
+| 3 — SysML v2 API | [flexo-mms-sysmlv2](https://github.com/Open-MBEE/flexo-mms-sysmlv2) | REST/JSON (OMG PSM) | Domain-typed CRUD, merge, diff, query | [[SysML v2]] |
+| 2 — Layer 1 | [flexo-mms-layer1-service](https://github.com/Open-MBEE/flexo-mms-layer1-service) | [[SPARQL]], [[Graph Store Protocol]], [[Linked Data Platform\|LDP]] | Version-controlled RDF graph management | [[Flexo Organization Level]] |
+| 1 — Quadstore | [[Apache Jena Fuseki]] (or compatible) | SPARQL 1.1 | Persistent storage of named graphs | [[Quadstore]] |
 
 ## Standards
 
