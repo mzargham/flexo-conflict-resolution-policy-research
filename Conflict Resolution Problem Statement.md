@@ -76,7 +76,7 @@ The connection to the [[Flexo MMS#Engineering Operations Levels|operational leve
 
 ### What Follows
 
-The remainder of this document makes the framing precise. §2 states the formal problem: the state variable, dynamics, objective, and constraints of the optimal control formulation. §3 establishes notation, drawing on a generalized dynamical systems framework. §4 develops the constrained optimization and Lagrange duality, connecting dual variables to predicate compliance scores and shadow prices. §5 defines the family of conflict resolution policies in terms of admissible actions and valid model states. §6 gives concrete examples — heuristic policies like last-writer-wins, source-wins, and union-with-constraint-check — and frames them in the governance structure: policy-making at the organizational level, judgment by qualified individuals on teams.
+The remainder of this document makes the framing precise. §2 states the formal problem: the state variable, dynamics, objective, and constraints of the optimal control formulation. §3 establishes notation, drawing on a generalized dynamical systems framework. §4 develops the constrained optimization and Lagrange duality, connecting dual variables to predicate compliance scores and shadow prices. §5 defines the family of conflict resolution policies in terms of admissible actions and valid model states. §6 gives concrete examples — heuristic policies like last-writer-wins, source-wins, and union-with-constraint-check — and frames them in the governance structure: policy-making at the organizational level, judgment by qualified individuals on teams. §7 identifies open problems and future work. §8 collects references.
 
 ---
 
@@ -246,6 +246,7 @@ The formulation rests on four essential assumptions:
 
 4. **Conservative conflict detection.** If *either* application order violates constraints, the policy enters analysis mode. If one order is the valid and the other is invalid then the valid ordering is the default synthesis.
 
+---
 
 ## 3 Notation
 
@@ -493,6 +494,85 @@ The formalism makes these decisions explicit. Without it, the choice between las
 
 The progression from last-writer-wins to constraint-aware synthesis is a progression in **information**: from no constraint evaluation, to pass/fail checks, to full shadow prices and traceability. Each step produces more information about the merge and requires more infrastructure (oracle evaluation, optimization, dual variable computation). The right policy for an organization depends on how much information it needs and what it is willing to invest in producing it.
 
+---
+
+## 7 Future Work
+
+### Constraint Language and Oracle Implementation
+
+The formalism defines $c_i : \mathcal{X} \to \mathbb{R}$ abstractly. Implementing the [[Predicate Compliance Oracle]] requires choosing concrete constraint languages: [[SPARQL]] ASK queries for referential integrity, SHACL shapes for schema conformance, OWL axioms for type reasoning, computation engines or external solvers for parametric constraints. The choice of language determines what the oracle can evaluate, at what computational cost, and with what granularity of violation reporting. A practical implementation will likely require a heterogeneous dispatch — different constraint types evaluated by different backends — and the design of that dispatch is itself a significant engineering problem.
+
+### Three-Way Diff and Commit DAG
+
+The formalism assumes the cross-application states $X_{uv}$ and $X_{vu}$ are computable. In [[Flexo MMS]], this requires three-way diff (ancestor vs. source, ancestor vs. target) and merge base identification in a commit directed acyclic graph (DAG). The current commit model uses a single-parent linked list; supporting [[Merge|merge commits]] — which require multiple parents — requires extending the data model to a DAG. The algorithm for finding a common ancestor and computing semantically meaningful three-way diffs over [[RDF]] graphs is not yet implemented.
+
+### Delta Composition Semantics
+
+Commit composition $u \oplus v$ is defined conceptually as "the intended union of changes." In Flexo, commits are [[Diff and Delta|SPARQL UPDATE patches]], and composing two arbitrary patches is non-trivial: order of operations matters, the net effect depends on which triples the patches share, and some higher-order operations (rename, move, retype) may be lost when reduced to triple-level insert/delete. Formalizing composition at the patch level — and determining when two patches commute — is an open problem that connects directly to the non-commutativity assumption in §2.
+
+### Computational Tractability
+
+The constrained optimization in §2 and §4 is stated abstractly. For practical use in interactive merge workflows, the feasible set must be characterizable, the intent loss $L_{\text{intent}}$ computable, and the solver efficient enough to return results within the latency expectations of a merge operation. Specific instantiations of $d_X$, $\gamma$, and the constraint functions will determine whether exact solutions, convex relaxations, or heuristic approximations are needed. The structure of the constraint functions — whether they are convex, separable, or have exploitable sparsity — will shape the choice of solver.
+
+### Conflict Interaction and Partial Resolution
+
+The formalism treats conflict resolution as a single optimization over all conflicting constraints simultaneously. In practice, resolving one conflict may create or exacerbate another — satisfying constraint $c_i$ may require violating $c_j$. Whether partial resolution is possible — some conflicts resolved automatically, others deferred to human review — while maintaining model consistency is an open question. The monotonicity property from §5 provides a starting point: removing a constraint from $\mathcal{C}_{\text{active}}$ can only expand the feasible set, never shrink it, so deferring a constraint is always safe in terms of feasibility.
+
+### Multi-Party Merges
+
+The formalism handles two commits $u$ and $v$ from a common ancestor. Extending to $n$-way merges — multiple branches converging simultaneously — requires generalizing the cross-application analysis (from two orderings to $n!$ permutations), the conflict detection (violations may appear only in specific orderings), and the optimization (the intent loss must account for $n$ contributors' intentions). The combinatorial explosion of orderings is the central challenge.
+
+### Staleness and Dependency Tracking
+
+§2 notes that stored behavioral constraint evaluations become defunct when upstream model elements change. Formalizing this dependency — which model elements a behavioral evaluation depends on, and when a change invalidates a stored result — is itself a constraint management problem. It connects to the broader question of incremental constraint evaluation: when the model state changes, which constraints need re-evaluation and which remain valid? An efficient invalidation mechanism would reduce the computational cost of the oracle and enable tighter integration with [[Continuous Integration]] workflows.
+
+### Cross-Organization Federation
+
+The formalism assumes a single repository with a single set of constraints and a single governance hierarchy. Federated model management — where different organizations maintain portions of a shared model — introduces coordination protocols beyond single-repository merge. Constraint evaluation may span organizational boundaries (a coupling constraint between components owned by different organizations), and the governance hierarchy (§5) must accommodate multiple organizations with potentially conflicting policies.
+
+### Implementation Mapping
+
+The [[Flexo Conflict Resolution Mapping]] — connecting the formalism developed here to concrete [[Flexo MMS]] operations (the merge endpoint, SPARQL infrastructure, [[Continuous Integration|CI]] pipelines, and the governance model) — remains to be developed. This mapping is the bridge between the problem statement and a working implementation.
+
+---
+
+## 8 References
+
+### Constrained Optimization and Duality
+
+- Boyd, S. & Vandenberghe, L. *Convex Optimization*. Cambridge University Press, 2004. Chapters 5 (Duality) and 11 (Interior-point methods). Standard reference for Lagrange duality, shadow prices, complementary slackness, and KKT conditions. Freely available at [stanford.edu/~boyd/cvxbook](https://stanford.edu/~boyd/cvxbook/).
+
+- Bertsekas, D.P. *Constrained Optimization and Lagrange Multiplier Methods*. Athena Scientific, 1996. Multiplier methods, sensitivity analysis, and the connection between dual variables and constraint prices.
+
+- Nocedal, J. & Wright, S.J. *Numerical Optimization*. 2nd ed., Springer, 2006. Chapters 12–19 cover theory and algorithms for constrained optimization, including penalty methods, augmented Lagrangian, and sequential quadratic programming.
+
+### Optimal Control and Dynamical Systems
+
+- Bertsekas, D.P. *Dynamic Programming and Optimal Control*. 4th ed., Athena Scientific, 2017. The control-theoretic framing used throughout this document: state variables, control inputs, transition functions, cost functionals, and constraint handling in sequential decision problems.
+
+- Zargham, M. & Shorish, J. "Generalized Dynamical Systems Part I: Foundations." Working paper, 2022. Available at [WU Vienna](https://research.wu.ac.at/files/23782375/Zargham_Shorish_GDS_Part_I__Foundations_2022.pdf). The GDS framework from which this document's notation and state-space formulation are drawn.
+
+- Zhang, Z. et al. "On modeling blockchain-enabled economic networks as stochastic dynamical systems." *Applied Network Science* 5, 19 (2020). [doi:10.1007/s41109-020-0254-9](https://doi.org/10.1007/s41109-020-0254-9). Earlier application of the GDS framework to governance and policy in networked systems.
+
+### Multidisciplinary Design Optimization
+
+- Martins, J.R.R.A. & Lambe, A.B. "Multidisciplinary design optimization: A survey of architectures." *AIAA Journal* 51(9), 2049–2075, 2013. Survey of MDO architectures; the coupling constraints in §2 and §4 draw on this tradition of cross-discipline constraint management.
+
+- Sobieszczanski-Sobieski, J. & Haftka, R.T. "Multidisciplinary aerospace design optimization: Survey of recent developments." *Structural Optimization* 14(1), 1–23, 1997. Foundational survey on optimization across engineering disciplines with coupled constraints.
+
+### Software Merging and Version Control
+
+- Mens, T. "A state-of-the-art survey on software merging." *IEEE Transactions on Software Engineering* 28(5), 449–462, 2002. Comprehensive survey of merge techniques (textual, syntactic, semantic); the conflict classification in §1 draws on this taxonomy.
+
+- Westfechtel, B. "Structure-oriented merging of revisions of software documents." *Proceedings of the 3rd International Workshop on Software Configuration Management*, 68–79, 1991. Early work on structure-aware merging beyond line-level diff.
+
+- Zhu, H. et al. "Conflict Resolution for Structured Merge via Version Space Algebra." *Proc. ACM Program. Lang.* 2 (OOPSLA), Article 166, 2018. [doi:10.1145/3276536](https://doi.org/10.1145/3276536). Formal framework for structured merge using version space algebra.
+
+### Model Versioning
+
+- Brosch, P. et al. "Towards Semantics-Aware Merge Support in Optimistic Model Versioning." In *Models in Software Engineering*, Springer, 2012. Semantic-aware merge for models, addressing the gap between textual and structural conflict detection.
+
+- Cicchetti, A. et al. "Models in Conflict — Towards a Semantically Enhanced Version Control System for Models." In *Models in Software Engineering*, Springer, 2008. Model-level conflict detection beyond textual diff.
 
 ---
 ← [[Flexo MMS]] · [[Flexo Conflict Resolution Mapping]]
