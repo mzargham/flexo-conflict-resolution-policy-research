@@ -17,7 +17,16 @@ This repository is an [Obsidian](https://obsidian.md/) vault. To read the conten
 2. Open Obsidian and select **Open folder as vault**
 3. Navigate to the cloned directory
 
-The entry point is **Flexo MMS.md**.
+## Where to Start
+
+| If you want to… | Start here |
+|------------------|------------|
+| Get an overview of Flexo and navigate the vault | **Flexo MMS.md** |
+| Understand the conflict resolution approach without the math | **Flexo Conflict Resolution Mapping.md** |
+| Read the full mathematical formalism | **Conflict Resolution Problem Statement.md** |
+| Understand Flexo's architecture and data model | **RDF.md** → **Quadstore.md** → **SPARQL.md** |
+| Understand the governance and policy framework | **Verification and Validation.md** → **Policy.md** |
+| See what merge looks like today and what's missing | **Merge.md** |
 
 ## Links
 

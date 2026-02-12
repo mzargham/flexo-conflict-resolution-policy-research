@@ -550,7 +550,7 @@ The [[Flexo Conflict Resolution Mapping]] connects the formalism developed here 
 
 - Bertsekas, D.P. *Dynamic Programming and Optimal Control*. 4th ed., Athena Scientific, 2017. The control-theoretic framing used throughout this document: state variables, control inputs, transition functions, cost functionals, and constraint handling in sequential decision problems.
 
-- Zargham, M. & Shorish, J. "Generalized Dynamical Systems Part I: Foundations." Working paper, 2022. Available at [WU Vienna](https://research.wu.ac.at/files/23782375/Zargham_Shorish_GDS_Part_I__Foundations_2022.pdf). The GDS framework from which this document's notation and state-space formulation are drawn.
+- Zargham, M. & Shorish, J. "Generalized Dynamical Systems Part I: Foundations." Working paper, 2022. Available at [WU Vienna](https://research.wu.ac.at/ws/portalfiles/portal/23782375/Zargham_Shorish_GDS_Part_I_Foundations_2022.pdf). The GDS framework from which this document's notation and state-space formulation are drawn.
 
 - Zhang, Z. et al. "On modeling blockchain-enabled economic networks as stochastic dynamical systems." *Applied Network Science* 5, 19 (2020). [doi:10.1007/s41109-020-0254-9](https://doi.org/10.1007/s41109-020-0254-9). Earlier application of the GDS framework to governance and policy in networked systems.
 
