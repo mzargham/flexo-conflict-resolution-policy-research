@@ -19,14 +19,14 @@ This repository is an [Obsidian](https://obsidian.md/) vault. To read the conten
 
 ## Where to Start
 
-| If you want to…                                              | Start here                                         |
-| ------------------------------------------------------------ | -------------------------------------------------- |
-| Get an overview of Flexo and navigate the vault              | [Flexo MMS](Flexo%20MMS.md)                                                                         |
-| Understand the conflict resolution approach without the math | [Flexo Conflict Resolution Mapping](Flexo%20Conflict%20Resolution%20Mapping.md)                     |
-| Read the full mathematical formalism                         | [Conflict Resolution Problem Statement](Conflict%20Resolution%20Problem%20Statement.md)             |
-| Understand Flexo's architecture and data model               | [RDF](RDF.md) → [Quadstore](Quadstore.md) → [SPARQL](SPARQL.md)                                    |
-| Understand the governance and policy framework               | [Verification and Validation](Verification%20and%20Validation.md) → [Policy](Policy.md)             |
-| See what merge looks like today and what's missing           | [Merge](Merge.md)                                                                                    |
+| If you want to…                                                     | Start here                                                                              |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Get an overview of Flexo and navigate the vault                     | [Flexo MMS](Flexo%20MMS.md)                                                             |
+| Understand the conflict resolution approach without the math        | [Flexo Conflict Resolution Mapping](Flexo%20Conflict%20Resolution%20Mapping.md)         |
+| Read the full mathematical formalism                                | [Conflict Resolution Problem Statement](Conflict%20Resolution%20Problem%20Statement.md) |
+| Understand Flexo's architecture and data model                      | [RDF](RDF.md) → [Quadstore](Quadstore.md) → [SPARQL](SPARQL.md)                         |
+| Understand the governance and policy framework                      | [Verification and Validation](Verification%20and%20Validation.md) → [Policy](Policy.md) |
+| See what models are, what merge looks like today and what's missing | [Model](Model.md) → [Merge](Merge.md)                                                     |
 
 ## Links
 
