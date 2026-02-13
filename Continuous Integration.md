@@ -32,4 +32,4 @@ CI must not silently resolve validation concerns. When a check touches something
 This is the same principle from [[Verification and Validation]] and [[Policy]], applied to the workflow layer.
 
 ---
-← [[Verification and Validation]] · [[Rules and Norms]] · [[Policy]] · [[Flexo Conflict Resolution Mapping]] · [[Flexo Team Level]] · [[Flexo Organization Level]]
+← [[Verification and Validation]] · [[Rules and Norms]] · [[Policy]] · [[Flexo Conflict Resolution Mapping]] · [[Flexo Team Level]] · [[Flexo Organization Level]] · [[Key Insight]]

@@ -36,6 +36,20 @@ For text, a "clean" merge (no conflict markers) is a valid merge. For models, a 
 
 ---
 
+## Why CI Helps but Is Not Enough
+
+The natural response to assumption 3 breaking is: add a [[Continuous Integration|CI]] pipeline. Run constraint checks on the merged state before accepting it. If a check fails, block the merge. This is correct — and it is part of the architecture the formalism defines. But it addresses only one of the three broken assumptions, and even there it provides less than what is needed.
+
+CI patches the **self-certification gap**. A CI pipeline that evaluates $C(X_{\text{merged}}) \leq \mathbf{0}$ before accepting a merge ensures that invalid states are not silently accepted. This is valuable and necessary. But CI is a **binary gate**: it tells you *whether* the merged state violates constraints, not *why*, not *which commits are responsible*, and not *what to do about it*.
+
+CI does not address **non-commutativity**. A pipeline that checks the merged state sees one candidate — whichever the merge algorithm produced. It does not evaluate both application orderings $f(f(X, u), v)$ and $f(f(X, v), u)$, so it cannot distinguish between a conflict that manifests in both orderings (a genuine coupling conflict) and one that manifests only in one (an ordering artifact). This distinction matters for resolution: the former requires modifying the commits; the latter may be resolvable by choosing the right application order.
+
+CI does not address **resolution synthesis**. When a constraint check fails, CI blocks the merge — but it does not generate alternative resolutions, compute how much each candidate deviates from the contributors' intent, or identify which constraints are binding and which are slack. The engineer sees a red check and must figure out the rest manually. The formalism's contribution is precisely this structured information: shadow prices, intent loss, requirement attribution. Producing that information requires reasoning about commits *relative to* states — applying candidate commits to the current state, evaluating constraints on the results, and comparing alternatives. This is not something a pass/fail gate can do.
+
+In short: CI is the enforcement mechanism for the verification-scope portion of conflict resolution, and the formalism depends on it. But CI operates on states. The commit/state separation is what gives CI the right states to check, and what makes CI's results interpretable as part of a resolution protocol rather than a bare rejection.
+
+---
+
 ## The Separation
 
 The formalism adopts a convention from control engineering and dynamical systems that keeps these concepts distinct:
@@ -64,4 +78,4 @@ The separation is not a notational preference. It is the structural prerequisite
 The [[A Policy-based Approach to Model Lifecycle Management with Flexo|lifecycle diagrams]] adopt this convention throughout: $u$ and $v$ are commits, $X_0$ and $X_1$ are states, and the diagrams trace the flow from control input through state transition to constraint evaluation. The convention propagates from the mathematics through the API design — the merge endpoint receives commits and returns states (or conflict reports with constraint attribution) — to the governance framework, where policies are defined in terms of admissible states and the constraints that bound them.
 
 ---
-← [[Flexo MMS]] · [[Model]] · [[Diff and Delta]] · [[Merge]] · [[Conflict Resolution Problem Statement]] · [[Flexo Conflict Resolution Mapping]] · [[Policy]]
+← [[Flexo MMS]] · [[Model]] · [[Diff and Delta]] · [[Merge]] · [[Continuous Integration]] · [[Conflict Resolution Problem Statement]] · [[Flexo Conflict Resolution Mapping]] · [[Policy]]
