@@ -25,7 +25,7 @@ In [[Flexo MMS]], a model at a given commit is a **named graph of [[RDF]] triple
 
 The SE sense defines *what the model means* — its structure carries engineering intent. The storage sense defines *how the model is represented and versioned* — as a set of triples in a graph database.
 
-Conflict resolution operates at the intersection: it must manipulate the storage representation (triples) while respecting the engineering semantics (types, constraints, intent). A resolution that is valid at the triple level may be invalid at the model level — this is the core challenge the [[Flexo Conflict Resolution Mapping|formalism]] must address.
+Conflict resolution operates at the intersection: it must manipulate the storage representation (triples) while respecting the engineering semantics (types, constraints, intent). A resolution that is valid at the triple level may be invalid at the model level — this is the core challenge the [[Flexo Conflict Resolution Mapping|formalism]] must address. The [[Key Insight]] develops why this dual nature forces a separation between commits (change descriptions) and states (model snapshots).
 
 ---
-← [[Flexo MMS]] · [[RDF]] · [[Quadstore]] · [[SysML v2]]
+← [[Flexo MMS]] · [[RDF]] · [[Quadstore]] · [[SysML v2]] · [[Key Insight]]

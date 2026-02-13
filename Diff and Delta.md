@@ -77,4 +77,4 @@ This is a resource-performance tradeoff: only ref-head snapshots are kept materi
 - [Layer 1 OpenAPI spec](https://www.openmbee.org/flexo-mms-layer1-openapi/)
 
 ---
-← [[Model]] · [[Merge]] · [[Quadstore]] · [[Flexo Conflict Resolution Mapping]]
+← [[Model]] · [[Merge]] · [[Quadstore]] · [[Flexo Conflict Resolution Mapping]] · [[Key Insight]]

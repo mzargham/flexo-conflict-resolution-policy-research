@@ -38,4 +38,4 @@ See [[Rules and Norms]] for the full spectrum.
 The formalism in [[Flexo Conflict Resolution Mapping]] defines policies as functions over model state that identify conflicts and produce resolutions, borrowing structure from optimal control theory.
 
 ---
-← [[Verification and Validation]] · [[Rules and Norms]] · [[Continuous Integration]] · [[Flexo Conflict Resolution Mapping]]
+← [[Verification and Validation]] · [[Rules and Norms]] · [[Continuous Integration]] · [[Flexo Conflict Resolution Mapping]] · [[Key Insight]]

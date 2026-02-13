@@ -16,7 +16,7 @@ Merging models is harder than merging text because models carry constraints. A [
 
 ## The Core Idea
 
-The formalism frames conflict resolution as a **constrained optimization problem**. A model state $X$ is the set of elements, relationships, and attributes at a given commit. Commits $u$ and $v$ are control inputs — descriptions of intended state change. The state transition function $f$ applies a commit to a state:
+The formalism frames conflict resolution as a **constrained optimization problem**. A model state $X$ is the set of elements, relationships, and attributes at a given commit. Commits $u$ and $v$ are control inputs — descriptions of intended state change (the [[Key Insight]] develops why this separation is essential). The state transition function $f$ applies a commit to a state:
 
 $$X^+ = f(X, u)$$
 
@@ -106,4 +106,4 @@ The [[Conflict Resolution Problem Statement]] develops the mathematics in full:
 This document maps the *what* and *where*; the problem statement develops the *why* and *how*.
 
 ---
-← [[Flexo MMS]] · [[Model]] · [[Diff and Delta]] · [[Merge]] · [[Conflict Classification]] · [[Predicate Compliance Oracle]] · [[Policy]]
+← [[Flexo MMS]] · [[Model]] · [[Diff and Delta]] · [[Merge]] · [[Conflict Classification]] · [[Predicate Compliance Oracle]] · [[Policy]] · [[Key Insight]]

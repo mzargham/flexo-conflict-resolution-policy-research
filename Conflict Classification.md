@@ -125,4 +125,4 @@ The formalism should handle assertable constraints as hard or soft constraints i
 - [flexo-mms-sysmlv2 OpenAPI](https://github.com/Open-MBEE/flexo-mms-sysmlv2) — merge 409 response schema
 
 ---
-← [[Model]] · [[Merge]] · [[Diff and Delta]] · [[Policy]] · [[Verification and Validation]] · [[Flexo Conflict Resolution Mapping]]
+← [[Model]] · [[Merge]] · [[Diff and Delta]] · [[Policy]] · [[Verification and Validation]] · [[Flexo Conflict Resolution Mapping]] · [[Key Insight]]

@@ -48,6 +48,8 @@ The RDF data model gives us a precise notion of "state" in Flexo:
 - A **commit** = a [[SPARQL]] Update (`INSERT`/`DELETE`) applied to the parent snapshot's model graph, producing a new model graph
 - The **commit DAG** tracks lineage; each node implies a model graph (materialized or recoverable)
 
+These are distinct objects — the commit is the *change description*, the model graph is the *resulting state* — and the [[Key Insight]] explains why maintaining this distinction is necessary for conflict resolution in structured models.
+
 → [[Flexo Conflict Resolution Mapping]]
 
 ## References

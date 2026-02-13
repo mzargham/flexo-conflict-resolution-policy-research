@@ -23,6 +23,7 @@ This repository is an [Obsidian](https://obsidian.md/) vault. To read the conten
 | If you want to…                                                     | Start here                                                                              |
 | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | Get an overview of Flexo and navigate the vault                     | [Flexo MMS](Flexo%20MMS.md)                                                             |
+| Understand why model merge differs from text VCS                    | [Key Insight](Key%20Insight.md)                                                         |
 | Understand the conflict resolution approach without the math        | [Flexo Conflict Resolution Mapping](Flexo%20Conflict%20Resolution%20Mapping.md)         |
 | Read the full mathematical formalism                                | [Conflict Resolution Problem Statement](Conflict%20Resolution%20Problem%20Statement.md) |
 | Understand Flexo's architecture and data model                      | [RDF](RDF.md) → [Quadstore](Quadstore.md) → [SPARQL](SPARQL.md)                         |

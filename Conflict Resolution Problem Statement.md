@@ -113,7 +113,7 @@ The **state transition function** $f$ applies a commit to a state:
 
 $$X^+ = f(X, u)$$
 
-yielding a new state $X^+$. This is the control-theoretic framing: the model state is the state variable, and commits are control inputs.
+yielding a new state $X^+$. This is the control-theoretic framing: the model state is the state variable, and commits are control inputs (see [[Key Insight]] for why this separation is necessary for structured models).
 
 ### Composition of Commits
 

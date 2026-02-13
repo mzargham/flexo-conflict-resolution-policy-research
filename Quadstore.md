@@ -49,7 +49,7 @@ Creating a new commit is a state transition on the quadstore ([Commits, Refs and
 
 The SPARQL Update **mutates** the dataset it is applied against — the parent's snapshot graph is transformed into the child's. This is why the parent must be materialized first.
 
-**Conflict scenario**: when two contributors independently create commits with the same parent, both intend to mutate the same parent snapshot. Reconciling these concurrent mutations is the problem addressed by the [[Flexo Conflict Resolution Mapping|conflict resolution formalism]].
+**Conflict scenario**: when two contributors independently create commits with the same parent, both intend to mutate the same parent snapshot. Reconciling these concurrent mutations is the problem addressed by the [[Flexo Conflict Resolution Mapping|conflict resolution formalism]]. The [[Key Insight]] explains why this requires treating commits and states as distinct objects.
 
 ## Reference Implementation
 

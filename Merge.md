@@ -64,7 +64,7 @@ This prevents concurrent *writes to the same branch* but does not address the *m
 
 ## State Transition Semantics
 
-The merge operation can be specified as a state transition with pre- and post-conditions:
+The merge operation can be specified as a state transition with pre- and post-conditions (the [[Key Insight]] develops why this framing — commits as control inputs, model states as state variables — is necessary for structured models):
 
 **Pre-conditions:**
 
@@ -101,4 +101,4 @@ The merge operation can be specified as a state transition with pre- and post-co
 - [Commits, Refs and Snapshots](https://openmbee.atlassian.net/wiki/spaces/OPENMBEE/pages/613613569) — OpenMBEE Confluence
 
 ---
-← [[Model]] · [[Diff and Delta]] · [[Conflict Classification]] · [[Flexo Conflict Resolution Mapping]]
+← [[Model]] · [[Diff and Delta]] · [[Conflict Classification]] · [[Flexo Conflict Resolution Mapping]] · [[Key Insight]]

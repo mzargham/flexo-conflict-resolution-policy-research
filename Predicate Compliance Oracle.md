@@ -60,4 +60,4 @@ The oracle spans the [[Verification and Validation]] boundary:
 The [[Conflict Classification]] taxonomy maps onto oracle behavior: Level 1 and Level 2 conflicts involve predicates with verification-scope oracles; Level 3 conflicts involve predicates whose oracles require human input.
 
 ---
-← [[Model]] · [[Conflict Classification]] · [[Verification and Validation]] · [[Policy]] · [[Flexo Conflict Resolution Mapping]]
+← [[Model]] · [[Conflict Classification]] · [[Verification and Validation]] · [[Policy]] · [[Flexo Conflict Resolution Mapping]] · [[Key Insight]]

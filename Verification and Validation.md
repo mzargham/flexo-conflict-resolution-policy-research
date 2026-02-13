@@ -28,4 +28,4 @@ Automated merge policies can handle verification — enforce constraint predicat
 A [[Policy]]'s automated resolution scope is bounded to verification-like checks. Validation concerns produce advisories or blocks, not automated resolutions.
 
 ---
-← [[Policy]] · [[Rules and Norms]] · [[Continuous Integration]]
+← [[Policy]] · [[Rules and Norms]] · [[Continuous Integration]] · [[Key Insight]]
