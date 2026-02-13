@@ -2,6 +2,10 @@
 
 Version control systems conflate two distinct objects: the *record of change* (the patch, the diff, the delta) and the *resulting state* (the snapshot, the tree, the model graph). In text-based VCS this conflation is harmless — the merge algorithm operates on content alone, and if it produces output, that output *is* the merged state. For structured, constraint-laden [[Model|models]], the conflation breaks down. Whether a change is acceptable depends not only on what it changes but on the state it lands on, and evaluating that requires machinery that text merge does not need and cannot provide. This is why the formalism in the [[Conflict Resolution Problem Statement]] and the [[Flexo Conflict Resolution Mapping]] adopts a control-engineering convention: commits are *control inputs*, model states are *state variables*, and the state transition function connects them.
 
+![[control-action-export.png]]
+
+The diagram shows the state space of the conflict resolution problem. Green boxes are valid states ($C(X) \leq \mathbf{0}$); red boxes are constraint-violating states. From the common ancestor $X$, commits $u$ and $v$ each produce individually valid states — but the cross-application states $f(f(X,u),v)$ and $f(f(X,v),u)$ both violate constraints. The resolution commit $w$ (thick black arrow) produces a valid state $f(X,w)$ directly from the ancestor. The dashed arrows $u'$ and $v'$ are the commits that would carry each branch head to the resolution: $f(f(X,u), v') = f(X,w)$ and $f(f(X,v), u') = f(X,w)$. These two-hop paths are useful for checking intent preservation — comparing $v'$ against $v$ measures how much Bob's intent was modified to reach the resolution, and comparing $u'$ against $u$ measures the same for Alice. They provide an intuition source for  defining a distance metric $d_X(w; u,v)$.
+
 ---
 
 ## The VCS Convention
