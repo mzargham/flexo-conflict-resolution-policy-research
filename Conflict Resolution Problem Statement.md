@@ -4,7 +4,7 @@
 
 ### The Setting
 
-[[Flexo MMS]] is a version control system for structured data. It stores models as [[RDF]] graphs in a [[Quadstore|quadstore]], exposes [[SPARQL]] and [[Graph Store Protocol]] endpoints for query and update, and versions model state through a commit history of SPARQL UPDATE patches. Branches, snapshots, and diffs are native operations. In principle, Flexo provides for models what Git provides for source code: a content-addressable, history-preserving, branch-and-merge workflow.
+[[Flexo MMS]] is a [[VCS|version control system]] for structured data. It stores models as [[RDF]] graphs in a [[Quadstore|quadstore]], exposes [[SPARQL]] and [[Graph Store Protocol]] endpoints for query and update, and versions model state through a commit history of SPARQL UPDATE patches. Branches, snapshots, and diffs are native operations. In principle, Flexo provides for models what Git provides for source code: a content-addressable, history-preserving, branch-and-merge workflow.
 
 In practice, the "merge" part is missing.
 

@@ -1,6 +1,6 @@
 # Key Insight
 
-Version control systems conflate two distinct objects: the *record of change* (the patch, the diff, the delta) and the *resulting state* (the snapshot, the tree, the model graph). In text-based VCS this conflation is harmless — the merge algorithm operates on content alone, and if it produces output, that output *is* the merged state. For structured, constraint-laden [[Model|models]], the conflation breaks down. Whether a change is acceptable depends not only on what it changes but on the state it lands on, and evaluating that requires machinery that text merge does not need and cannot provide. This is why the formalism in the [[Conflict Resolution Problem Statement]] and the [[Flexo Conflict Resolution Mapping]] adopts a control-engineering convention: commits are *control inputs*, model states are *state variables*, and the state transition function connects them.
+[[VCS|Version control systems]] conflate two distinct objects: the *record of change* (the patch, the diff, the delta) and the *resulting state* (the snapshot, the tree, the model graph). In text-based VCS this conflation is harmless — the merge algorithm operates on content alone, and if it produces output, that output *is* the merged state. For structured, constraint-laden [[Model|models]], the conflation breaks down. Whether a change is acceptable depends not only on what it changes but on the state it lands on, and evaluating that requires machinery that text merge does not need and cannot provide. This is why the formalism in the [[Conflict Resolution Problem Statement]] and the [[Flexo Conflict Resolution Mapping]] adopts a control-engineering convention: commits are *control inputs*, model states are *state variables*, and the state transition function connects them.
 
 ![[control-action-export.png]]
 
@@ -10,7 +10,7 @@ The diagram shows the state space of the conflict resolution problem. Green boxe
 
 ## The VCS Convention
 
-In Git, "commit" refers simultaneously to two things: the *diff* (what changed) and the *tree* (the resulting snapshot). `git show` prints the patch; `git checkout` materializes the tree. The commit object binds them together — the patch is derived from the tree difference, and the tree is derived by applying the patch to the parent. The two representations are duals of the same commit, and it rarely matters which one you think about.
+In Git, "commit" refers simultaneously to two things: the *diff* (what changed) and the *tree* (the resulting snapshot). (The [[VCS]] note develops a finer decomposition — action, artifact, and state — and explains why VCS collapses them.) `git show` prints the patch; `git checkout` materializes the tree. The commit object binds them together — the patch is derived from the tree difference, and the tree is derived by applying the patch to the parent. The two representations are duals of the same commit, and it rarely matters which one you think about.
 
 [[Flexo MMS]] inherits this pattern. A commit is a [[Diff and Delta|SPARQL UPDATE patch]] *and* the named-graph snapshot it produces. The patch is procedural (a sequence of INSERT/DELETE operations); the snapshot is declarative (the set of [[RDF]] triples at that point in history). They are stored separately but understood as one thing: the commit.
 
@@ -82,4 +82,4 @@ The separation is not a notational preference. It is the structural prerequisite
 The [[A Policy-based Approach to Model Lifecycle Management with Flexo|lifecycle diagrams]] adopt this convention throughout: $u$ and $v$ are commits, $X_0$ and $X_1$ are states, and the diagrams trace the flow from control input through state transition to constraint evaluation. The convention propagates from the mathematics through the API design — the merge endpoint receives commits and returns states (or conflict reports with constraint attribution) — to the governance framework, where policies are defined in terms of admissible states and the constraints that bound them.
 
 ---
-← [[Flexo MMS]] · [[Model]] · [[Diff and Delta]] · [[Merge]] · [[Continuous Integration]] · [[Conflict Resolution Problem Statement]] · [[Flexo Conflict Resolution Mapping]] · [[Policy]]
+← [[VCS]] · [[Flexo MMS]] · [[Model]] · [[Diff and Delta]] · [[Merge]] · [[Continuous Integration]] · [[Conflict Resolution Problem Statement]] · [[Flexo Conflict Resolution Mapping]] · [[Policy]]

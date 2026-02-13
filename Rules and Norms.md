@@ -1,6 +1,6 @@
 # Rules and Norms
 
-How [[Verification and Validation]] concerns manifest as governance mechanisms across version control workflows.
+How [[Verification and Validation]] concerns manifest as governance mechanisms across [[VCS|version control]] workflows.
 
 ## Rules
 
